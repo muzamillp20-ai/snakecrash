@@ -120,106 +120,99 @@ export default function App() {
   );
 }
 
-// Snake Info / Gallery Screen
+// Snake Info / Gallery Screen - Mobile Optimized
 function SnakeInfoScreen({ onBack }: { onBack: () => void }) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-green-900/20 to-gray-900 p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-green-900/20 to-gray-900 p-3">
+      <div className="max-w-lg mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
           <button
             onClick={onBack}
-            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-bold transition-colors"
+            className="px-4 py-2 bg-gray-700 active:bg-gray-600 text-white rounded-lg font-bold transition-colors text-sm"
           >
             ← Back
           </button>
-          <h1 className="text-2xl md:text-3xl font-bold text-yellow-400">
-            🐍 Snake Gallery 🐍
+          <h1 className="text-lg font-bold text-yellow-400">
+            🐍 Snake Gallery
           </h1>
-          <div></div>
+          <div className="w-16"></div>
         </div>
 
         {/* Snake Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
           {snakeVarieties.map((snake, index) => (
             <div
               key={snake.id}
-              className="bg-gray-800/80 rounded-xl p-4 border border-gray-700 hover:border-green-500 transition-all hover:scale-[1.02]"
+              className="bg-gray-800/80 rounded-xl p-3 border border-gray-700"
             >
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-2 mb-2">
                 <div
-                  className="w-12 h-12 rounded-full border-4 flex items-center justify-center text-xl"
-                  style={{ backgroundColor: snake.bodyColor, borderColor: snake.headColor }}
+                  className="w-10 h-10 rounded-full border-3 flex items-center justify-center text-lg flex-shrink-0"
+                  style={{ backgroundColor: snake.bodyColor, borderColor: snake.headColor, borderWidth: '3px' }}
                 >
                   🐍
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">{snake.name}</h3>
-                  <p className="text-xs text-gray-400">#{index + 1} of 12</p>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-white truncate">{snake.name}</h3>
+                  <p className="text-[10px] text-gray-400">#{index + 1} of 12</p>
                 </div>
               </div>
-              <p className="text-sm text-gray-300 mb-2">{snake.description}</p>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400">Speed:</span>
-                <div className="flex gap-1">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className={`w-3 h-3 rounded-full ${
-                        i < Math.ceil(snake.speed * 3) ? 'bg-yellow-400' : 'bg-gray-600'
-                      }`}
-                    />
-                  ))}
+              <p className="text-xs text-gray-300 mb-2">{snake.description}</p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-gray-400">Speed:</span>
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`w-2.5 h-2.5 rounded-full ${
+                          i < Math.ceil(snake.speed * 3) ? 'bg-yellow-400' : 'bg-gray-600'
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="mt-2 flex items-center gap-2">
-                <span className="text-xs text-gray-400">Pattern:</span>
-                <span className="text-xs text-green-400 capitalize">{snake.pattern}</span>
+                <span className="text-[10px] text-green-400 capitalize bg-gray-700 px-1.5 py-0.5 rounded">{snake.pattern}</span>
               </div>
             </div>
           ))}
         </div>
 
         {/* Board Themes */}
-        <h2 className="text-2xl font-bold text-yellow-400 mb-4">🎨 Board Themes</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <h2 className="text-base font-bold text-yellow-400 mb-2">🎨 Board Themes</h2>
+        <div className="grid grid-cols-2 gap-2 mb-6">
           {boardThemes.map((board) => (
             <div
               key={board.id}
-              className="rounded-xl p-4 border-2 hover:scale-[1.02] transition-all"
+              className="rounded-lg p-2 border-2"
               style={{ backgroundColor: board.bgColor, borderColor: board.borderColor }}
             >
-              <h3 className="text-lg font-bold text-white">{board.name}</h3>
-              <p className="text-sm text-gray-300">{board.description}</p>
-              <div className="mt-2 flex items-center gap-2">
-                <div className="w-4 h-4 rounded" style={{ backgroundColor: board.gridColor }} />
-                <span className="text-xs text-gray-300">Grid</span>
-                <div className="w-4 h-4 rounded" style={{ backgroundColor: board.borderColor }} />
-                <span className="text-xs text-gray-300">Border</span>
-                <span className="text-xs text-gray-300">Wall: {board.wallPattern}</span>
-              </div>
+              <h3 className="text-xs font-bold text-white">{board.name}</h3>
+              <p className="text-[10px] text-gray-300">{board.description}</p>
             </div>
           ))}
         </div>
 
         {/* Game Stats */}
-        <div className="bg-gray-800/50 rounded-xl p-6 text-center">
-          <h3 className="text-xl font-bold text-yellow-400 mb-3">📊 Game Stats</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-gray-700/50 rounded-lg p-3">
-              <p className="text-2xl font-bold text-green-400">100</p>
-              <p className="text-xs text-gray-400">Total Levels</p>
+        <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
+          <h3 className="text-base font-bold text-yellow-400 mb-3">📊 Game Stats</h3>
+          <div className="grid grid-cols-4 gap-2">
+            <div className="bg-gray-700/50 rounded-lg p-2">
+              <p className="text-xl font-bold text-green-400">100</p>
+              <p className="text-[10px] text-gray-400">Levels</p>
             </div>
-            <div className="bg-gray-700/50 rounded-lg p-3">
-              <p className="text-2xl font-bold text-purple-400">12</p>
-              <p className="text-xs text-gray-400">Snake Types</p>
+            <div className="bg-gray-700/50 rounded-lg p-2">
+              <p className="text-xl font-bold text-purple-400">12</p>
+              <p className="text-[10px] text-gray-400">Snakes</p>
             </div>
-            <div className="bg-gray-700/50 rounded-lg p-3">
-              <p className="text-2xl font-bold text-blue-400">10</p>
-              <p className="text-xs text-gray-400">Board Themes</p>
+            <div className="bg-gray-700/50 rounded-lg p-2">
+              <p className="text-xl font-bold text-blue-400">10</p>
+              <p className="text-[10px] text-gray-400">Boards</p>
             </div>
-            <div className="bg-gray-700/50 rounded-lg p-3">
-              <p className="text-2xl font-bold text-red-400">1</p>
-              <p className="text-xs text-gray-400">Default Game</p>
+            <div className="bg-gray-700/50 rounded-lg p-2">
+              <p className="text-xl font-bold text-red-400">1</p>
+              <p className="text-[10px] text-gray-400">Default</p>
             </div>
           </div>
         </div>

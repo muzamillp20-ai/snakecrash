@@ -17,6 +17,7 @@ type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 
 export default function Game({ level, onWin, onLose, onBack }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [snake, setSnake] = useState<Position[]>([{ x: 10, y: 10 }]);
   const [food, setFood] = useState<Position>({ x: 15, y: 15 });
   const [direction, setDirection] = useState<Direction>('RIGHT');
@@ -25,6 +26,7 @@ export default function Game({ level, onWin, onLose, onBack }: GameProps) {
   const [score, setScore] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [obstacles, setObstacles] = useState<Position[]>([]);
+  const [canvasSize, setCanvasSize] = useState(300);
   
   const directionRef = useRef<Direction>('RIGHT');
   const gameLoopRef = useRef<number | null>(null);
@@ -36,8 +38,21 @@ export default function Game({ level, onWin, onLose, onBack }: GameProps) {
   
   const snakeVariety = snakeVarieties.find(s => s.id === level.snakeId) || snakeVarieties[0];
   const boardTheme = boardThemes.find(b => b.id === level.boardId) || boardThemes[0];
-  
-  const CELL_SIZE = Math.floor(500 / level.gridSize);
+
+  // Responsive canvas sizing
+  useEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        const maxWidth = Math.min(window.innerWidth - 32, 400);
+        setCanvasSize(maxWidth);
+      }
+    };
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
+
+  const CELL_SIZE = Math.floor(canvasSize / level.gridSize);
   const CANVAS_SIZE = CELL_SIZE * level.gridSize;
 
   // Generate obstacles for the level
@@ -323,7 +338,7 @@ export default function Game({ level, onWin, onLose, onBack }: GameProps) {
       // Draw eyes on head
       if (isHead) {
         ctx.fillStyle = snakeVariety.eyeColor;
-        const eyeSize = CELL_SIZE / 6;
+        const eyeSize = Math.max(CELL_SIZE / 7, 2);
         const eyeOffset = CELL_SIZE / 4;
         
         let eye1X = segment.x * CELL_SIZE + CELL_SIZE / 2 - eyeOffset;
@@ -360,15 +375,15 @@ export default function Game({ level, onWin, onLose, onBack }: GameProps) {
   // Handle game over
   useEffect(() => {
     if (gameOver && won) {
-      const timer = setTimeout(onWin, 1500);
+      const timer = setTimeout(onWin, 2000);
       return () => clearTimeout(timer);
     } else if (gameOver && !won) {
-      const timer = setTimeout(onLose, 1500);
+      const timer = setTimeout(onLose, 2000);
       return () => clearTimeout(timer);
     }
   }, [gameOver, won, onWin, onLose]);
 
-  // Touch controls
+  // Touch controls - swipe detection
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -382,19 +397,21 @@ export default function Game({ level, onWin, onLose, onBack }: GameProps) {
     const dx = touch.clientX - touchStartRef.current.x;
     const dy = touch.clientY - touchStartRef.current.y;
     
+    const minSwipe = 15;
+    
     if (Math.abs(dx) > Math.abs(dy)) {
-      if (dx > 20 && directionRef.current !== 'LEFT') {
+      if (dx > minSwipe && directionRef.current !== 'LEFT') {
         directionRef.current = 'RIGHT';
         setDirection('RIGHT');
-      } else if (dx < -20 && directionRef.current !== 'RIGHT') {
+      } else if (dx < -minSwipe && directionRef.current !== 'RIGHT') {
         directionRef.current = 'LEFT';
         setDirection('LEFT');
       }
     } else {
-      if (dy > 20 && directionRef.current !== 'UP') {
+      if (dy > minSwipe && directionRef.current !== 'UP') {
         directionRef.current = 'DOWN';
         setDirection('DOWN');
-      } else if (dy < -20 && directionRef.current !== 'DOWN') {
+      } else if (dy < -minSwipe && directionRef.current !== 'DOWN') {
         directionRef.current = 'UP';
         setDirection('UP');
       }
@@ -402,31 +419,50 @@ export default function Game({ level, onWin, onLose, onBack }: GameProps) {
     touchStartRef.current = null;
   };
 
+  const changeDirection = (dir: Direction) => {
+    if (gameOverRef.current) return;
+    const opposites: Record<Direction, Direction> = {
+      UP: 'DOWN', DOWN: 'UP', LEFT: 'RIGHT', RIGHT: 'LEFT'
+    };
+    if (directionRef.current !== opposites[dir]) {
+      directionRef.current = dir;
+      setDirection(dir);
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center gap-3 p-4">
-      {/* Header */}
-      <div className="flex items-center justify-between w-full max-w-[520px]">
+    <div className="flex flex-col items-center w-full max-w-[420px] mx-auto px-2 py-2 select-none">
+      {/* Header Bar */}
+      <div className="w-full flex items-center justify-between mb-2">
         <button
           onClick={onBack}
-          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-bold transition-colors"
+          className="px-3 py-2 bg-gray-700 active:bg-gray-500 text-white rounded-lg font-bold text-sm transition-colors"
         >
           ← Back
         </button>
-        <div className="text-center">
-          <h2 className="text-lg font-bold text-yellow-400">Level {level.level}: {level.name}</h2>
-          <p className="text-sm text-gray-300">🐍 {snakeVariety.name} | Score: {score}/{level.foodRequired}</p>
+        <div className="text-center flex-1 mx-2">
+          <h2 className="text-sm font-bold text-yellow-400 leading-tight">
+            Lv.{level.level}
+          </h2>
+          <p className="text-xs text-gray-300">
+            🐍 {snakeVariety.name}
+          </p>
         </div>
-        <button
-          onClick={() => setIsPaused(p => !p)}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-600 text-white rounded-lg font-bold transition-colors"
-        >
-          {isPaused ? '▶' : '⏸'}
-        </button>
+        <div className="text-right">
+          <p className="text-sm font-bold text-green-400">{score}/{level.foodRequired}</p>
+          <button
+            onClick={() => setIsPaused(p => !p)}
+            className="px-3 py-1 bg-blue-700 active:bg-blue-500 text-white rounded-lg font-bold text-xs transition-colors mt-1"
+          >
+            {isPaused ? '▶ Play' : '⏸ Pause'}
+          </button>
+        </div>
       </div>
 
       {/* Game Canvas */}
       <div
-        className="relative border-4 rounded-lg overflow-hidden shadow-2xl"
+        ref={containerRef}
+        className="relative rounded-lg overflow-hidden shadow-2xl border-2 w-full flex justify-center"
         style={{ borderColor: boardTheme.borderColor }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
@@ -436,14 +472,16 @@ export default function Game({ level, onWin, onLose, onBack }: GameProps) {
           width={CANVAS_SIZE}
           height={CANVAS_SIZE}
           className="block"
+          style={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}
         />
         
         {/* Pause Overlay */}
         {isPaused && (
-          <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/75 flex items-center justify-center">
             <div className="text-center">
-              <p className="text-4xl font-bold text-white">⏸ PAUSED</p>
-              <p className="text-gray-300 mt-2">Press Space or tap to continue</p>
+              <p className="text-3xl font-bold text-white">⏸</p>
+              <p className="text-lg font-bold text-white mt-1">PAUSED</p>
+              <p className="text-xs text-gray-300 mt-1">Tap Play to continue</p>
             </div>
           </div>
         )}
@@ -451,11 +489,12 @@ export default function Game({ level, onWin, onLose, onBack }: GameProps) {
         {/* Win Overlay */}
         {won && (
           <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
-            <div className="text-center animate-bounce">
-              <p className="text-3xl font-bold text-green-400">🏆 WINNER!</p>
-              <p className="text-2xl font-bold text-yellow-300 mt-2">Winner Mahira Bhaiya</p>
-              <p className="text-xl text-pink-300 mt-1">Proud of U! 💖</p>
-              <p className="text-gray-300 mt-2">Mahira escaped Muzamill Bhaiya!</p>
+            <div className="text-center px-4">
+              <p className="text-4xl mb-2">🏆</p>
+              <p className="text-2xl font-bold text-green-400">WINNER!</p>
+              <p className="text-lg font-bold text-yellow-300 mt-1">Winner Mahira Mansha</p>
+              <p className="text-base text-pink-300 mt-1">Proud of U! 💖</p>
+              <p className="text-xs text-gray-300 mt-2">Mahira escaped!</p>
             </div>
           </div>
         )}
@@ -463,51 +502,70 @@ export default function Game({ level, onWin, onLose, onBack }: GameProps) {
         {/* Lose Overlay */}
         {gameOver && !won && (
           <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-red-500">💀 GAME OVER</p>
-              <p className="text-xl font-bold text-orange-400 mt-2">Muzamill Bhaiya Digested Mahira!</p>
-              <p className="text-lg text-gray-300 mt-1">🐍 The snake got Mahira! 🐍</p>
-              <p className="text-sm text-gray-400 mt-2">Score: {score}/{level.foodRequired}</p>
+            <div className="text-center px-4">
+              <p className="text-4xl mb-2">💀</p>
+              <p className="text-xl font-bold text-red-500">GAME OVER</p>
+              <p className="text-sm font-bold text-orange-400 mt-1">Muzamill Bhaiya Digested Mahira!</p>
+              <p className="text-xs text-gray-300 mt-1">Score: {score}/{level.foodRequired}</p>
             </div>
           </div>
         )}
       </div>
 
-      {/* Mobile Controls */}
-      <div className="grid grid-cols-3 gap-2 mt-2 md:hidden">
-        <div></div>
-        <button
-          onClick={() => { if (directionRef.current !== 'DOWN') { directionRef.current = 'UP'; setDirection('UP'); }}}
-          className="p-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-2xl font-bold active:bg-gray-500"
-        >
-          ↑
-        </button>
-        <div></div>
-        <button
-          onClick={() => { if (directionRef.current !== 'RIGHT') { directionRef.current = 'LEFT'; setDirection('LEFT'); }}}
-          className="p-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-2xl font-bold active:bg-gray-500"
-        >
-          ←
-        </button>
-        <button
-          onClick={() => { if (directionRef.current !== 'UP') { directionRef.current = 'DOWN'; setDirection('DOWN'); }}}
-          className="p-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-2xl font-bold active:bg-gray-500"
-        >
-          ↓
-        </button>
-        <button
-          onClick={() => { if (directionRef.current !== 'LEFT') { directionRef.current = 'RIGHT'; setDirection('RIGHT'); }}}
-          className="p-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-2xl font-bold active:bg-gray-500"
-        >
-          →
-        </button>
+      {/* Mobile D-Pad Controls */}
+      <div className="mt-3 w-full flex justify-center">
+        <div className="grid grid-cols-3 gap-1" style={{ width: '180px' }}>
+          {/* Row 1 */}
+          <div></div>
+          <button
+            onTouchStart={(e) => { e.preventDefault(); changeDirection('UP'); }}
+            onClick={() => changeDirection('UP')}
+            className="w-14 h-14 bg-gray-700 active:bg-green-600 text-white rounded-xl text-2xl font-bold flex items-center justify-center shadow-lg border border-gray-600"
+          >
+            ▲
+          </button>
+          <div></div>
+          
+          {/* Row 2 */}
+          <button
+            onTouchStart={(e) => { e.preventDefault(); changeDirection('LEFT'); }}
+            onClick={() => changeDirection('LEFT')}
+            className="w-14 h-14 bg-gray-700 active:bg-green-600 text-white rounded-xl text-2xl font-bold flex items-center justify-center shadow-lg border border-gray-600"
+          >
+            ◀
+          </button>
+          <div className="w-14 h-14 bg-gray-800 rounded-xl flex items-center justify-center border border-gray-700">
+            <span className="text-lg">🐍</span>
+          </div>
+          <button
+            onTouchStart={(e) => { e.preventDefault(); changeDirection('RIGHT'); }}
+            onClick={() => changeDirection('RIGHT')}
+            className="w-14 h-14 bg-gray-700 active:bg-green-600 text-white rounded-xl text-2xl font-bold flex items-center justify-center shadow-lg border border-gray-600"
+          >
+            ▶
+          </button>
+          
+          {/* Row 3 */}
+          <div></div>
+          <button
+            onTouchStart={(e) => { e.preventDefault(); changeDirection('DOWN'); }}
+            onClick={() => changeDirection('DOWN')}
+            className="w-14 h-14 bg-gray-700 active:bg-green-600 text-white rounded-xl text-2xl font-bold flex items-center justify-center shadow-lg border border-gray-600"
+          >
+            ▼
+          </button>
+          <div></div>
+        </div>
       </div>
 
-      {/* Game Info */}
-      <div className="text-center text-sm text-gray-400 mt-2">
-        <p>🐍 Snake: {snakeVariety.name} | Board: {boardTheme.name}</p>
-        <p>Use Arrow Keys / WASD / Swipe to move | Space to pause</p>
-        <p className="text-yellow-400 mt-1">Eat 👧 {level.foodRequired} times to win! Snakes pass through walls!</p>
+      {/* Quick Info */}
+      <div className="mt-2 text-center w-full">
+        <p className="text-xs text-gray-400">
+          🐍 {snakeVariety.name} | {boardTheme.name} | Swipe or use buttons
+        </p>
+        <p className="text-xs text-yellow-400 mt-1">
+          Eat 👧 {level.foodRequired}x to win! Walls pass through!
+        </p>
       </div>
     </div>
   );

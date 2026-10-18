@@ -10,17 +10,25 @@ html, body {
   width: 100%;
   height: 100%;
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
 }
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #111827;
   color: white;
+  overscroll-behavior: none;
+}
+
+/* Prevent pull-to-refresh on mobile */
+body {
+  overscroll-behavior-y: contain;
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -29,7 +37,7 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: #4b5563;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -61,6 +69,15 @@ body {
 canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+  touch-action: none;
+}
+
+/* Prevent text selection during gameplay */
+.select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 /* Touch action for mobile */
@@ -68,8 +85,32 @@ canvas {
   touch-action: none;
 }
 
+/* Button active states for mobile */
+button:active {
+  transform: scale(0.97);
+}
+
 /* Selection color */
 ::selection {
   background-color: #22c55e;
   color: white;
+}
+
+/* Safe area for modern phones */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Fix for iOS bounce */
+html {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }

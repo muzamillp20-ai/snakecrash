@@ -10,7 +10,7 @@
 **Mahira Mansha Snake Crash** is an exciting snake game featuring **Muzamill Bhaiya's snake** chasing **Mahira** through 100 challenging levels! 
 
 ### 🏆 Win Condition
-When Mahira wins: **"Winner Mahira Bhaiya - Proud of U!"** 💖
+When Mahira wins: **"Winner Mahira Mansha - Proud of U!"** 💖
 
 ### 💀 Lose Condition  
 When the snake catches Mahira: **"Muzamill Bhaiya Digested Mahira!"** 🐍
